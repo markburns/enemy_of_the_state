@@ -5,24 +5,18 @@ Delfos.application_directories = ["./app", "./lib"]
 module Toughen
   class << self
     def display_class_instance_variables
-      each_class_instance_variable do |s|
-        puts s
-      end
+      each_class_instance_variable { |s| puts(s) }
     end
 
     def fail_if_class_instance_variable
-      each_class_instance_variable do |s|
-        fail s
-      end
+      each_class_instance_variable { |s| fail(s) }
     end
 
     private
 
-    def each_class_instance_variable
+    def each_class_instance_variable(&block)
       application_objects.each do |o|
-        variables_for(o) do |s|
-          yield
-        end
+        variables_for(o, &block)
       end
     end
 
