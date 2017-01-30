@@ -4,7 +4,7 @@ Delfos.application_directories = ["./app", "./lib"]
 
 module Toughen
   class << self
-    def remaining_class_variables
+    def display_class_instance_variables
       ObjectSpace.each_object do |o|
         klass = puts o.is_a?(Module) ? o : o.class;
 
