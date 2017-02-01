@@ -1,32 +1,48 @@
-gem "delfos"
-require "delfos/method_logging"
-Delfos.application_directories = ["./app", "./lib"]
+require "set"
 
-module Toughen
+module EnemyOfTheState
   class << self
-    def display_class_instance_variables
+    def display
       each_class_instance_variable { |s| puts(s) }
+      nil
     end
 
-    def fail_if_class_instance_variable
-      each_class_instance_variable { |s| fail(s) }
+    def fail
+      each_class_instance_variable { |s| Kernel.fail(s) }
+
+      nil
     end
 
     private
 
     def each_class_instance_variable(&block)
-      application_objects.each do |o|
-        variables_for(o, &block)
+      set = Set.new
+
+      application_objects do |o|
+        next if o == set
+
+        begin
+          next if set.include?(o) 
+        rescue 
+          # exception whilst iterating over set means we are 
+          # looking inside this `set' instance itself
+          next
+        end
+
+        set.add(o)
+
+
+        variables_for(o, count=0, &block)
       end
     end
 
     def application_objects
       ObjectSpace.each_object do |o|
-        klass = puts o.is_a?(Module) ? o : o.class;
+        klass = o.is_a?(Module) ? o : o.class;
 
         next if ignore?(klass)
         yield klass
-      end.uniq
+      end
     end
 
     def ignore?(klass)
@@ -34,34 +50,35 @@ module Toughen
 
       methods =
         klass.methods.map{|m|          klass.method(m)} +
-        klass.instance_methods.map{|m| klass.instance_methods}
+        klass.instance_methods.map{|m| klass.instance_method(m) }
 
-      methods.all? do
+      methods.all? do |m|
         Delfos::MethodLogging.exclude?(m)
       end
     end
 
-    def variables_for(n, &block)
-      return unless n.is_a?(Module)
+    def variables_for(namespace, count, &block)
+      return unless namespace.is_a?(Module)
 
-      display_variables(n, &block)
+      display_variables(namespace, &block)
 
-      n.constants.each do |c|
-        klass = relevant_constant_for(c, n)
+      namespace.constants.each do |c|
+        klass = relevant_constant_for(c, namespace)
         next unless klass
 
         display_variables(klass, &block)
 
-        handle_nesting(klass, n, &block)
+        handle_nesting(klass, namespace, count, &block)
       end
     end
 
-    def handle_nesting(klass, n, &block)
+    def handle_nesting(klass, namespace, count, &block)
       klass.constants.each do |k|
         k = klass.const_get(k)
-        next if k == klass || k == n
+        next if k == klass || k == namespace
 
-        variables_for(k, &block)
+        count += 1
+        variables_for(k, count, &block)
       end
     end
 
@@ -70,6 +87,8 @@ module Toughen
       klass = namespace.const_get(c)
 
       return unless klass.is_a?(Module)
+      return unless klass.name
+      return unless namespace.name
       return unless klass.name[namespace.name]
       klass
     end
@@ -87,4 +106,3 @@ module Toughen
     end
   end
 end
-

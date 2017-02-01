@@ -1,8 +1,19 @@
+
+
+# Example sets some state
+class SomeObject
+  def self.asdf
+    @a = 1
+  end
+end
+
+SomeObject.asdf
+
 config.after(:each) do
-  Toughen.display_class_instance_variables
+  EnemyOfTheState.display
 end
 
 # OR
 config.after(:each) do
-  Toughen.fail_if_class_instance_variables
+  EnemyOfTheState.fail
 end
