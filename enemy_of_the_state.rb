@@ -1,6 +1,5 @@
 require "set"
 require_relative "application_folders"
-require_relative "common_path"
 
 module EnemyOfTheState
   class << self
@@ -18,15 +17,7 @@ module EnemyOfTheState
       set = Set.new
 
       application_objects do |o|
-        next if o == set
-
-        begin
-          next if set.include?(o)
-        rescue
-          # exception whilst iterating over set means we are
-          # looking inside this `set' instance itself
-          next
-        end
+        next if o == set || set.include?(o)
 
         set.add(o)
 
@@ -38,7 +29,6 @@ module EnemyOfTheState
       ObjectSpace.each_object do |o|
         klass = o.is_a?(Module) ? o : o.class;
 
-        #next if ignore?(klass)
         yield klass
       end
     end
