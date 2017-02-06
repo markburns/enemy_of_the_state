@@ -1,19 +1,7 @@
+require_relative "app/example_code"
+require_relative "enemy_of_the_state"
 
-
-# Example sets some state
-class SomeObject
-  def self.asdf
-    @a = 1
-  end
-end
-
-SomeObject.asdf
-
-config.after(:each) do
-  EnemyOfTheState.display
-end
-
-# OR
-config.after(:each) do
-  EnemyOfTheState.fail
-end
+EnemyOfTheState.application_directories = [File.expand_path("./app")]
+EnemyOfTheState.display 
+# OR 
+# EnemyOfTheState.fail
